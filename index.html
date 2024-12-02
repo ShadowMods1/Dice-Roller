@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Dice Roller</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      margin-top: 10%;
+    }
+
+    .title {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    /* Dice Container */
+    .dice-container {
+      width: 150px;
+      height: 150px;
+      perspective: 800px;
+      margin: 0 auto 20px;
+    }
+
+    .dice {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(0deg) rotateY(0deg);
+      transition: transform 1s ease-out;
+    }
+
+    .dice-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 15px;
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3), 0 5px 10px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Dot Placement */
+    .dot {
+      width: 20px;
+      height: 20px;
+      background: black;
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    /* Face Positions */
+    .face-1 { transform: rotateY(0deg) translateZ(75px); }
+    .face-2 { transform: rotateY(90deg) translateZ(75px); }
+    .face-3 { transform: rotateX(90deg) translateZ(75px); }
+    .face-4 { transform: rotateX(-90deg) translateZ(75px); }
+    .face-5 { transform: rotateY(-90deg) translateZ(75px); }
+    .face-6 { transform: rotateY(180deg) translateZ(75px); }
+
+    /* Dot Layout for Each Face */
+    .face-1 .dot { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .face-2 .dot:nth-child(1) { top: 20%; left: 20%; }
+    .face-2 .dot:nth-child(2) { bottom: 20%; right: 20%; }
+    .face-3 .dot:nth-child(1) { top: 20%; left: 20%; }
+    .face-3 .dot:nth-child(2) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .face-3 .dot:nth-child(3) { bottom: 20%; right: 20%; }
+    .face-4 .dot:nth-child(1) { top: 20%; left: 20%; }
+    .face-4 .dot:nth-child(2) { top: 20%; right: 20%; }
+    .face-4 .dot:nth-child(3) { bottom: 20%; left: 20%; }
+    .face-4 .dot:nth-child(4) { bottom: 20%; right: 20%; }
+    .face-5 .dot:nth-child(1) { top: 20%; left: 20%; }
+    .face-5 .dot:nth-child(2) { top: 20%; right: 20%; }
+    .face-5 .dot:nth-child(3) { bottom: 20%; left: 20%; }
+    .face-5 .dot:nth-child(4) { bottom: 20%; right: 20%; }
+    .face-5 .dot:nth-child(5) { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .face-6 .dot:nth-child(1) { top: 20%; left: 20%; }
+    .face-6 .dot:nth-child(2) { top: 20%; right: 20%; }
+    .face-6 .dot:nth-child(3) { top: 50%; left: 20%; transform: translateY(-50%); }
+    .face-6 .dot:nth-child(4) { top: 50%; right: 20%; transform: translateY(-50%); }
+    .face-6 .dot:nth-child(5) { bottom: 20%; left: 20%; }
+    .face-6 .dot:nth-child(6) { bottom: 20%; right: 20%; }
+
+    /* History Box */
+    .history-box {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 200px;
+      height: 300px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      border: 2px solid #ffa726;
+      border-radius: 10px;
+      overflow-y: auto;
+      padding: 10px;
+      display: none; /* Hidden by default */
+    }
+
+    .history-box.open {
+      display: block;
+    }
+
+    /* Toggle Button */
+    .toggle-btn {
+      position: absolute;
+      top: 10px;
+      right: 220px;
+      background: #ffa726;
+      color: black;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .toggle-btn.open {
+      transform: rotate(180deg);
+    }
+
+    /* Admin Button */
+    .admin-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .admin-btn:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">Interactive Dice Roller</div>
+    <div class="dice-container">
+      <div class="dice" id="dice">
+        <div class="dice-face face-1"><div class="dot"></div></div>
+        <div class="dice-face face-2"><div class="dot"></div><div class="dot"></div></div>
+        <div class="dice-face face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="dice-face face-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="dice-face face-5"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="dice-face face-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+    </div>
+    <button class="button" onclick="rollDice()">Roll</button>
+  </div>
+
+  <div class="history-box" id="history-box"></div>
+  <button class="toggle-btn" id="toggle-btn" onclick="toggleHistory()">⮞</button>
+  <button class="button admin-btn" onclick="openAdmin()">Admin Login</button>
+
+  <script>
+    const dice = document.getElementById("dice");
+    const historyBox = document.getElementById("history-box");
+    const toggleBtn = document.getElementById("toggle-btn");
+
+    function rollDice() {
+      const randomFace = Math.floor(Math.random() * 6) + 1;
+      const rotations = {
+        1: { x: 0, y: 0 },
+        2: { x: 0, y: -90 },
+        3: { x: -90, y: 0 },
+        4: { x: 90, y: 0 },
+        5: { x: 0, y: 90 },
+        6: { x: 180, y: 0 }
+      };
+
+      const { x, y } = rotations[randomFace];
+      dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+
+      setTimeout(() => {
+        addToHistory(randomFace);
+      }, 1000);
+    }
+
+    function toggleHistory() {
+      historyBox.classList.toggle("open");
+      toggleBtn.classList.toggle("open");
+    }
+
+    function addToHistory(face) {
+      const entry = document.createElement("div");
+      entry.textContent = `Rolled: ${face}`;
+      historyBox.appendChild(entry);
+    }
+
+    function openAdmin() {
+      window.location.href = "/admin";
+    }
+  </script>
+</body>
+</html>
